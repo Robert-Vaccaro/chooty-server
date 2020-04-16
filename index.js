@@ -1,24 +1,25 @@
-const http = require('http');
-const express = require('express');
+const fastify = require('fastify')({
+    logger: true
+});
+
 const socketio = require('socket.io');
-const cors = require('cors');
+const swagger = require('./config/swagger');
 
 const { addUser, removeUser, getUser, getUsersInRoom } = require('./users');
+const lessonRoutes = require('./routes/lessonRouter');
 
-const router = require('./router');
+const io = socketio(fastify.server);
 
-const app = express();
-const server = http.createServer(app);
-const io = socketio(server);
-
-app.use(cors());
-app.use(router);
+fastify.register(require('fastify-swagger'), swagger.options);
+lessonRoutes.forEach((route, index) => {
+    fastify.route(route);
+}); 
 
 io.on('connect', (socket) => {
   socket.on('join', ({ name, room }, callback) => {
     const { error, user } = addUser({ id: socket.id, name, room });
     
-    if(error) return callback(error);
+    if (error) return callback(error);
 
     socket.join(user.room);
 
@@ -41,11 +42,22 @@ io.on('connect', (socket) => {
   socket.on('disconnect', () => {
     const user = removeUser(socket.id);
 
-    if(user) {
+    if (user) {
       io.to(user.room).emit('message', { user: 'Admin', text: `${user.name} has left.` });
       io.to(user.room).emit('roomData', { room: user.room, users: getUsersInRoom(user.room)});
     }
   })
 });
 
-server.listen(process.env.PORT || 5000, () => console.log(`Server has started.`));
+const start = async () => {
+    try {
+        await fastify.listen(process.env.PORT || 5000);
+        fastify.swagger();
+        fastify.log.info(`Server listening on ${fastify.server.address().port}`);
+    } catch (err) {
+        fastify.log.error(err);
+        process.exit(1);
+    }
+};
+
+start();
