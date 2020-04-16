@@ -8,8 +8,7 @@ const swagger = require('./config/swagger');
 const { addUser, removeUser, getUser, getUsersInRoom } = require('./users');
 const lessonRoutes = require('./routes/lessonRouter');
 
-const app = require('fastify')();
-const io = socketio(app.server);
+const io = socketio(fastify.server);
 
 fastify.register(require('fastify-swagger'), swagger.options);
 lessonRoutes.forEach((route, index) => {
