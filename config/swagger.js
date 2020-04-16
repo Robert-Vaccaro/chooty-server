@@ -3,8 +3,8 @@ exports.options = {
     exposeRoute: true,
     swagger: {
         info: {
-            title: 'Boba Bunch API',
-            description: 'Boba Bunch REST API build with Node.js, MongoDB, and Fastify',
+            title: 'Chooty REST API',
+            description: 'Chooty REST API build with Node.js, DynamoDB, and Fastify',
             version: '1.0.0'
         },
         externalDocs: {
